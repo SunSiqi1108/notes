@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+/* 预览区 Markdown 基础排版 */
+.markdown-body {
+  @apply text-[15px] leading-7 text-gray-800;
+}
+.markdown-body h1 {
+  @apply text-2xl font-bold mt-1 mb-4 pb-2 border-b border-gray-200;
+}
+.markdown-body h2 {
+  @apply text-xl font-semibold mt-6 mb-3;
+}
+.markdown-body h3 {
+  @apply text-lg font-semibold mt-5 mb-2;
+}
+.markdown-body p {
+  @apply my-3;
+}
+.markdown-body a {
+  @apply text-blue-600 underline;
+}
+.markdown-body ul {
+  @apply list-disc pl-6 my-3 space-y-1;
+}
+.markdown-body ol {
+  @apply list-decimal pl-6 my-3 space-y-1;
+}
+.markdown-body blockquote {
+  @apply border-l-4 border-gray-300 pl-4 my-4 text-gray-600;
+}
+.markdown-body code {
+  @apply bg-gray-100 text-rose-600 px-1.5 py-0.5 rounded text-[13px] font-mono;
+}
+.markdown-body pre {
+  @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-4 text-[13px] leading-6;
+}
+.markdown-body pre code {
+  @apply bg-transparent text-inherit p-0;
+}
+.markdown-body table {
+  @apply w-full border-collapse my-4 text-sm;
+}
+.markdown-body th,
+.markdown-body td {
+  @apply border border-gray-200 px-3 py-2 text-left align-top;
+}
+.markdown-body th {
+  @apply bg-gray-50 font-semibold;
+}
+.markdown-body hr {
+  @apply my-6 border-gray-200;
+}
+.markdown-body img {
+  @apply max-w-full rounded;
+}
+.markdown-body input[type='checkbox'] {
+  @apply mr-1 align-middle;
+}
+.markdown-body li.task-list-item {
+  @apply list-none;
+}

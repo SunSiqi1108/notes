@@ -12,6 +12,19 @@ export interface Note extends NoteMeta {
   body: string;
 }
 
+/** 搜索命中结果：片段用于列表回显与高亮 */
+export interface SearchHit extends NoteMeta {
+  titleHit: boolean;
+  bodyHit: boolean;
+  snippet: string;
+}
+
+export interface ExportResult {
+  ok: boolean;
+  fileName: string;
+  file: string;
+}
+
 export type SaveStatus = 'idle' | 'saving' | 'saved';
 
 export interface WritePayload {
@@ -27,6 +40,8 @@ export interface NotesApi {
   createNote(title: string): Promise<Note>;
   deleteNote(id: string): Promise<{ ok: boolean }>;
   renameNote(payload: { id: string; title: string }): Promise<Note>;
+  searchNotes(query: string): Promise<SearchHit[]>;
+  exportHtml(payload: { id: string; title: string; html: string }): Promise<ExportResult>;
 }
 
 declare global {

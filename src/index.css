@@ -9,24 +9,28 @@ body,
   margin: 0;
 }
 
-/* 预览区 Markdown 基础排版 */
+body {
+  @apply bg-white text-gray-800 dark:bg-gray-900 dark:text-gray-200;
+}
+
+/* 预览区 Markdown 基础排版（含暗色变体） */
 .markdown-body {
-  @apply text-[15px] leading-7 text-gray-800;
+  @apply text-[15px] leading-7 text-gray-800 dark:text-gray-200;
 }
 .markdown-body h1 {
-  @apply text-2xl font-bold mt-1 mb-4 pb-2 border-b border-gray-200;
+  @apply text-2xl font-bold mt-1 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700;
 }
 .markdown-body h2 {
-  @apply text-xl font-semibold mt-6 mb-3;
+  @apply text-xl font-semibold mt-6 mb-3 dark:text-gray-100;
 }
 .markdown-body h3 {
-  @apply text-lg font-semibold mt-5 mb-2;
+  @apply text-lg font-semibold mt-5 mb-2 dark:text-gray-100;
 }
 .markdown-body p {
   @apply my-3;
 }
 .markdown-body a {
-  @apply text-blue-600 underline;
+  @apply text-blue-600 dark:text-blue-400 underline;
 }
 .markdown-body ul {
   @apply list-disc pl-6 my-3 space-y-1;
@@ -35,10 +39,10 @@ body,
   @apply list-decimal pl-6 my-3 space-y-1;
 }
 .markdown-body blockquote {
-  @apply border-l-4 border-gray-300 pl-4 my-4 text-gray-600;
+  @apply border-l-4 border-gray-300 dark:border-gray-600 pl-4 my-4 text-gray-600 dark:text-gray-400;
 }
 .markdown-body code {
-  @apply bg-gray-100 text-rose-600 px-1.5 py-0.5 rounded text-[13px] font-mono;
+  @apply bg-gray-100 dark:bg-gray-800 text-rose-600 dark:text-rose-400 px-1.5 py-0.5 rounded text-[13px] font-mono;
 }
 .markdown-body pre {
   @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-4 text-[13px] leading-6;
@@ -51,13 +55,13 @@ body,
 }
 .markdown-body th,
 .markdown-body td {
-  @apply border border-gray-200 px-3 py-2 text-left align-top;
+  @apply border border-gray-200 dark:border-gray-700 px-3 py-2 text-left align-top;
 }
 .markdown-body th {
-  @apply bg-gray-50 font-semibold;
+  @apply bg-gray-50 dark:bg-gray-800 font-semibold;
 }
 .markdown-body hr {
-  @apply my-6 border-gray-200;
+  @apply my-6 border-gray-200 dark:border-gray-700;
 }
 .markdown-body img {
   @apply max-w-full rounded;
@@ -67,4 +71,14 @@ body,
 }
 .markdown-body li.task-list-item {
   @apply list-none;
+}
+
+/* 侧栏滚动条在暗色下不至于太扎眼 */
+.dark ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 5px;
 }

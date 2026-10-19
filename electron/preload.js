@@ -7,5 +7,7 @@ contextBridge.exposeInMainWorld('notesApi', {
   writeNote: (payload) => ipcRenderer.invoke('notes:write', payload),
   createNote: (title) => ipcRenderer.invoke('notes:create', title),
   deleteNote: (id) => ipcRenderer.invoke('notes:delete', id),
-  renameNote: (payload) => ipcRenderer.invoke('notes:rename', payload)
+  renameNote: (payload) => ipcRenderer.invoke('notes:rename', payload),
+  searchNotes: (query) => ipcRenderer.invoke('notes:search', query),
+  exportHtml: (payload) => ipcRenderer.invoke('notes:exportHtml', payload)
 });

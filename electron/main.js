@@ -67,12 +67,13 @@ function sanitizeTitle(name) {
   return clean || '未命名笔记';
 }
 
-/** 生成不冲突的文件名 */
-function uniqueFile(dir, base) {
-  let name = base + '.md';
+/** 生成不冲突的文件名，ext 形如 '.md' / '.html'，省略时按 .md 处理 */
+function uniqueFile(dir, base, ext) {
+  const suffix = ext || '.md';
+  let name = base + suffix;
   let i = 1;
   while (fs.existsSync(path.join(dir, name))) {
-    name = base + ' ' + i + '.md';
+    name = base + ' ' + i + suffix;
     i++;
   }
   return name;
@@ -157,6 +158,122 @@ async function renameNote(payload) {
   }
   const stat = await fsp.stat(path.join(dir, targetId));
   return { id: targetId, title: titleOf(targetId), body: newBody, tags, updatedAt: stat.mtimeMs };
+}
+
+/** 全文搜索：同时匹配标题与正文，返回带回显片段的命中列表 */
+async function searchNotes(query) {
+  const dir = getNotesDir();
+  const files = (await fsp.readdir(dir)).filter((f) => f.toLowerCase().endsWith('.md'));
+  const q = String(query == null ? '' : query).trim();
+  const lower = q.toLowerCase();
+  const all = [];
+  for (const f of files) {
+    const full = path.join(dir, f);
+    const stat = await fsp.stat(full);
+    const raw = await fsp.readFile(full, 'utf8');
+    const { tags, body } = parseNote(raw);
+    all.push({ id: f, title: titleOf(f), updatedAt: stat.mtimeMs, tags, body });
+  }
+  all.sort((a, b) => b.updatedAt - a.updatedAt);
+
+  const toMeta = (n) => ({
+    id: n.id,
+    title: n.title,
+    updatedAt: n.updatedAt,
+    tags: n.tags,
+    titleHit: false,
+    bodyHit: false,
+    snippet: ''
+  });
+  if (!q) return all.map(toMeta);
+
+  const hits = [];
+  for (const n of all) {
+    const titleHit = n.title.toLowerCase().includes(lower);
+    const idx = n.body.toLowerCase().indexOf(lower);
+    if (!titleHit && idx < 0) continue;
+    let snippet = '';
+    if (idx >= 0) {
+      const start = Math.max(0, idx - 30);
+      const end = Math.min(n.body.length, idx + q.length + 60);
+      snippet =
+        (start > 0 ? '…' : '') +
+        n.body.slice(start, end).replace(/\s+/g, ' ') +
+        (end < n.body.length ? '…' : '');
+    }
+    hits.push({
+      id: n.id,
+      title: n.title,
+      updatedAt: n.updatedAt,
+      tags: n.tags,
+      titleHit,
+      bodyHit: idx >= 0,
+      snippet
+    });
+  }
+  return hits;
+}
+
+// 导出 HTML 用的内联样式，保证浏览器直接打开排版正常
+const EXPORT_CSS = `
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 48px 24px; background: #f7f7f8; color: #1f2328; line-height: 1.75;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  article { max-width: 780px; margin: 0 auto; padding: 40px 48px; background: #fff; border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .08); }
+  h1 { font-size: 28px; margin: 0 0 16px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb; }
+  h2 { font-size: 22px; margin: 28px 0 12px; }
+  h3 { font-size: 18px; margin: 22px 0 10px; }
+  p { margin: 12px 0; }
+  a { color: #2563eb; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
+  li.task-list-item { list-style: none; }
+  blockquote { margin: 16px 0; padding-left: 16px; border-left: 4px solid #d1d5db; color: #4b5563; }
+  code { background: #f3f4f6; color: #be123c; padding: 2px 6px; border-radius: 4px;
+    font-family: Consolas, "Courier New", monospace; font-size: 13px; }
+  pre { background: #111827; color: #f9fafb; padding: 16px; border-radius: 8px; overflow-x: auto; margin: 16px 0; }
+  pre code { background: none; color: inherit; padding: 0; font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th, td { border: 1px solid #e5e7eb; padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f9fafb; }
+  hr { margin: 28px 0; border: 0; border-top: 1px solid #e5e7eb; }
+  img { max-width: 100%; border-radius: 6px; }
+  footer { max-width: 780px; margin: 16px auto 0; font-size: 12px; color: #9ca3af; text-align: center; }
+`;
+
+/** 把渲染进程传来的 markdown HTML 包成完整文档 */
+function buildExportDoc(title, html) {
+  const safeTitle = String(title || '未命名笔记').replace(/[<>&]/g, '');
+  return [
+    '<!doctype html>',
+    '<html lang="zh-CN">',
+    '<head>',
+    '<meta charset="utf-8">',
+    '<meta name="viewport" content="width=device-width, initial-scale=1">',
+    '<title>' + safeTitle + '</title>',
+    '<style>' + EXPORT_CSS + '</style>',
+    '</head>',
+    '<body>',
+    '<article class="markdown-body">',
+    html || '',
+    '</article>',
+    '<footer>由「极简笔记」导出 · ' + new Date().toLocaleString('zh-CN') + '</footer>',
+    '</body>',
+    '</html>'
+  ].join('\n');
+}
+
+/** 导出单篇笔记为带样式的 HTML，存到 notes-data/exports/ */
+async function exportHtml(payload) {
+  const { id, title, html } = payload || {};
+  if (typeof id !== 'string' || !id) throw new Error('缺少笔记标识');
+  const dir = path.join(getNotesDir(), 'exports');
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const fileName = uniqueFile(dir, sanitizeTitle(title || titleOf(id)), '.html');
+  await fsp.writeFile(path.join(dir, fileName), buildExportDoc(titleOf(fileName), html), 'utf8');
+  return { ok: true, fileName, file: path.join(dir, fileName) };
 }
 
 // 预置欢迎笔记：仅在目录内没有任何 md 文件时创建
@@ -250,6 +367,8 @@ ipcMain.handle('notes:write', (_e, payload) => writeNote(payload));
 ipcMain.handle('notes:create', (_e, title) => createNote(title));
 ipcMain.handle('notes:delete', (_e, id) => deleteNote(id));
 ipcMain.handle('notes:rename', (_e, payload) => renameNote(payload));
+ipcMain.handle('notes:search', (_e, query) => searchNotes(query));
+ipcMain.handle('notes:exportHtml', (_e, payload) => exportHtml(payload));
 
 app.whenReady().then(async () => {
   await ensureWelcomeNote();

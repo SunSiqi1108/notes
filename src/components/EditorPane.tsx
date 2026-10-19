@@ -11,7 +11,7 @@ export default function EditorPane({ value, onChange }: Props) {
       onChange={(e) => onChange(e.target.value)}
       spellCheck={false}
       placeholder="用 Markdown 记录你的想法…"
-      className="flex-1 min-h-0 w-full resize-none outline-none p-5 bg-white font-mono text-[13px] leading-6 text-gray-800"
+      className="flex-1 min-h-0 w-full resize-none outline-none p-5 bg-white font-mono text-[13px] leading-6 text-gray-800 dark:bg-gray-900 dark:text-gray-200 dark:placeholder-gray-600"
     />
   );
 }

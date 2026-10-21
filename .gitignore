@@ -4,4 +4,4 @@ release/
 *.log
 .DS_Store
 .vscode/
-notes-data/exports/
+notes-data/
